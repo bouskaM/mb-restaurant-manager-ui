@@ -52,13 +52,14 @@ export class AuthService {
   private setLoginStatus(isLoggedIn: boolean): void {
     localStorage.setItem('isLoggedIn', String(isLoggedIn));
     this.isLoggedIn.set(isLoggedIn);
+    this.loginError.set(null);
   }
   
   private clearLoginStatus(): void {
     localStorage.removeItem('isLoggedIn');
     this.isLoggedIn.set(false);
+    this.loginError.set(null);
   }
-
 
   logout(): void {
     this.clearLoginStatus();
