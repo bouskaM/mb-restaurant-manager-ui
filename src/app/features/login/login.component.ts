@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -26,36 +27,45 @@ import { Router } from '@angular/router';
   ],
   template: `
     <div class="login-container">
-      <h2>Login</h2>
+      <ng-container *ngIf="!isRedirecting(); else redirecting">
+        <h2>Login</h2>
 
-      <form (ngSubmit)="login()">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Username</mat-label>
-          <input matInput [(ngModel)]="username" name="username" required />
-        </mat-form-field>
+        <form (ngSubmit)="login()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Username</mat-label>
+            <input matInput [(ngModel)]="username" name="username" required />
+          </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Password</mat-label>
-          <input
-            matInput
-            [(ngModel)]="password"
-            name="password"
-            type="password"
-            required
-          />
-        </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              [(ngModel)]="password"
+              name="password"
+              type="password"
+              required
+            />
+          </mat-form-field>
 
-        <button
-          mat-raised-button
-          [disabled]="!isFormValid()"
-          color="primary"
-          class="full-width"
-        >
-          Login
-        </button>
-      </form>
+          <button
+            mat-raised-button
+            [disabled]="!isFormValid()"
+            color="primary"
+            class="full-width"
+          >
+            Login
+          </button>
+        </form>
 
-      <p *ngIf="error()" class="error">{{ error() }}</p>
+        <p *ngIf="error()" class="error">{{ error() }}</p>
+      </ng-container>
+
+      <ng-template #redirecting>
+        <div class="redirecting">
+          <div class="spinner"></div>
+          <p class="pulsing">Redirecting to dashboard...</p>
+        </div>
+      </ng-template>
     </div>
   `,
   styles: [
@@ -73,6 +83,47 @@ import { Router } from '@angular/router';
       .error {
         color: red;
       }
+
+      .redirecting {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 40px;
+      }
+
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 4px solid #ccc;
+        border-top: 4px solid #3f51b5;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 16px;
+      }
+
+      .pulsing {
+        animation: pulse 1.5s ease-in-out infinite;
+        text-align: center;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -89,9 +140,22 @@ export class LoginComponent {
     () => this.username().trim() !== '' && this.password().trim() !== ''
   );
 
+  readonly isRedirecting = computed(() => this.authService.isLoggedIn());
+
+  readonly redirectEffect = effect((onCleanup) => {
+    if (this.authService.isLoggedIn()) {
+      const timeout = setTimeout(() => {
+        this.router.navigate(['/dashboard']);
+      }, 500);
+
+      onCleanup(() => clearTimeout(timeout));
+    }
+  });
+
   async login() {
     await this.authService.login(this.username(), this.password());
-    if(this.authService.isLoggedIn()){
+
+    if (this.authService.isLoggedIn()) {
       this.router.navigate(['/dashboard']);
     }
   }
