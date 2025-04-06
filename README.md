@@ -2,6 +2,11 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.5.
 
+## Vercel
+This project is currently deployed on Vercel
+
+https://mb-restaurant-manager-ui.vercel.app
+
 ## Development server
 
 To start a local development server, run:
