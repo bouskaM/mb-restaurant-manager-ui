@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardCardComponent } from './dashboard-card/dashboard-card.component';
 import { MatCardModule } from '@angular/material/card';
+import { DashboardCardComponent } from './dashboard-card.component';
 
 // Assignment note:
 // Displays modules 
