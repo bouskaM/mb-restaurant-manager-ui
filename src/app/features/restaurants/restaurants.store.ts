@@ -7,6 +7,7 @@ import {
 } from '../../models/restaurants.model';
 import { RestaurantService } from '../../core/restaurants.service';
 import { SortDirection } from '@angular/material/sort';
+import { firstValueFrom, forkJoin, map } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class RestaurantsStore {
@@ -22,9 +23,9 @@ export class RestaurantsStore {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(25);
   readonly isLoading = signal(false);
-
   readonly sortColumn = signal<RestaurantSortableColumn>('id');
   readonly sortDirection = signal<SortDirection>('asc');
+  readonly error = signal<string | null>(null);
 
   /**
    * SELECTORS
@@ -37,6 +38,7 @@ export class RestaurantsStore {
     return map;
   });
 
+  /** Restaurants filtered by search input */
   readonly filteredRestaurants = computed(() => {
     const search = this.searchTerm().toLowerCase();
     const managerMap = this.managerNameMap();
@@ -51,17 +53,18 @@ export class RestaurantsStore {
     });
   });
 
+  /** Restaurants sorted by selected column and direction */
   readonly sortedRestaurants = computed(() => {
     const column = this.sortColumn();
     const direction = this.sortDirection();
     const managerMap = this.managerNameMap();
-  
+
     return this.filteredRestaurants()
       .slice()
       .sort((a, b) => {
         let aValue: string | number = '';
         let bValue: string | number = '';
-  
+
         switch (column) {
           case 'id':
             aValue = a.id;
@@ -76,13 +79,14 @@ export class RestaurantsStore {
             bValue = managerMap.get(b.managerId)?.toLowerCase() ?? '';
             break;
         }
-  
+
         if (aValue < bValue) return direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return direction === 'asc' ? 1 : -1;
         return 0;
       });
   });
-  
+
+  /** Paginated view of sorted restaurants */
   readonly visibleRestaurants = computed(() => {
     const start = this.pageIndex() * this.pageSize();
     const end = start + this.pageSize();
@@ -98,12 +102,14 @@ export class RestaurantsStore {
     RestaurantWithManager[]
   >(() => {
     const managerMap = this.managerNameMap();
+    // add manager name to each restaurant in the visible list
     return this.visibleRestaurants().map((r) => ({
       ...r,
       managerName: managerMap.get(r.managerId) ?? 'N/A',
     }));
   });
 
+  /** Total number of restaurants after filtering */
   readonly totalFilteredCount = computed(() => {
     const search = this.searchTerm().toLowerCase();
     const managerMap = this.managerNameMap();
@@ -121,18 +127,26 @@ export class RestaurantsStore {
   /**
    * EFFECTS
    */
+  /** Loads restaurants and managers from the API */
   readonly load = async () => {
     this.isLoading.set(true);
+    this.error.set(null);
     try {
-      const [restaurants, managers] = await Promise.all([
-        this.restaurantService.getRestaurants().toPromise(),
-        this.restaurantService.getManagers().toPromise(),
-      ]);
+      const result = await firstValueFrom(
+        // Wait for both API calls to complete
+        // Assignmet node:
+        // Restaurant Component is not loaded until we have data for restaurants & managers
+        forkJoin([
+          this.restaurantService.getRestaurants(),
+          this.restaurantService.getManagers(),
+        ]).pipe(map(([restaurants, managers]) => ({ restaurants, managers })))
+      );
 
-      this.allRestaurants.set(restaurants ?? []);
-      this.allManagers.set(managers ?? []);
-    } catch (error) {
-      console.error('Error loading data:', error);
+      this.allRestaurants.set(result.restaurants ?? []);
+      this.allManagers.set(result.managers ?? []);
+    } catch (error: any) {
+      const errorMessage = error.message || 'An unexpected error occurred.';
+      this.error.set(`Failed to load restaurant data: ${errorMessage}`);
     } finally {
       this.isLoading.set(false);
     }
@@ -141,16 +155,20 @@ export class RestaurantsStore {
   /**
    * ACTIONS
    */
+
+  /** Sets search term and resets pagination */
   setSearchTerm(value: string) {
     this.searchTerm.set(value);
-    this.pageIndex.set(0); // reset page
+    this.pageIndex.set(0);
   }
 
+  /** Sets current page index and page size */
   setPage(index: number, size: number) {
     this.pageIndex.set(index);
     this.pageSize.set(size);
   }
 
+  /** Sets the column to sort by and toggles direction if same column is clicked again */
   setSort(column: RestaurantSortableColumn) {
     if (this.sortColumn() === column) {
       this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');

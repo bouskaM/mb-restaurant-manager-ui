@@ -5,6 +5,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../core/auth.service';
 
+/**
+ * NotFoundComponent displays a 404 error message.
+ * Shows a button to either return home or go to the dashboard depending on login status.
+ */
 @Component({
   selector: 'app-not-found',
   imports: [CommonModule, RouterModule, MatCardModule, MatButtonModule],

@@ -15,6 +15,17 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/auth.service';
 import { Router } from '@angular/router';
 
+// Assignment note:
+// Login to the application - Username + password
+// If success
+//  -Proceed to app
+// If error
+//  -Display meaningful error
+
+/**
+ * LoginComponent handles the login form and redirects on success.
+ * Shows error messages and loading UI while redirecting.
+ */
 @Component({
   selector: 'app-login',
   imports: [
@@ -134,14 +145,19 @@ export class LoginComponent {
 
   readonly username = signal('');
   readonly password = signal('');
+
+  /** Computed login error message from AuthService */
   readonly error = computed(() => this.authService.loginError());
 
+  /** Form validity check (both fields required) */
   readonly isFormValid = computed(
     () => this.username().trim() !== '' && this.password().trim() !== ''
   );
 
+  /** Indicates whether the user is already logged in (used to show redirect screen) */
   readonly isRedirecting = computed(() => this.authService.isLoggedIn());
 
+  /** Navigates to dashboard after a short delay if already logged in */
   readonly redirectEffect = effect((onCleanup) => {
     if (this.authService.isLoggedIn()) {
       const timeout = setTimeout(() => {
@@ -152,6 +168,7 @@ export class LoginComponent {
     }
   });
 
+  /** Attempts to log in and navigates to dashboard on success */
   async login() {
     await this.authService.login(this.username(), this.password());
 

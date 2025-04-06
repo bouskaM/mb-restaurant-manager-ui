@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { RouterModule } from '@angular/router';
 
+/**
+ * A reusable card component for the dashboard.
+ * Displays a title, description, and navigates to a given route on click.
+ */
 @Component({
   selector: 'app-dashboard-card',
   imports: [CommonModule, MatCardModule, RouterModule],
