@@ -1,7 +1,7 @@
 import { inject, Injectable, computed, signal } from '@angular/core';
 import {
-  Restaurant,
-  Manager,
+  RestaurantType,
+  ManagerType,
   RestaurantWithManager,
   RestaurantSortableColumn,
 } from '../../models/restaurants.model';
@@ -16,8 +16,8 @@ export class RestaurantsStore {
   /**
    * STATE
    */
-  private readonly allRestaurants = signal<Restaurant[]>([]);
-  private readonly allManagers = signal<Manager[]>([]);
+  private readonly allRestaurants = signal<RestaurantType[]>([]);
+  private readonly allManagers = signal<ManagerType[]>([]);
 
   readonly searchTerm = signal('');
   readonly pageIndex = signal(0);
