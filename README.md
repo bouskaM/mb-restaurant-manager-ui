@@ -9,6 +9,14 @@ https://mb-restaurant-manager-ui.vercel.app
 
 ## Development server
 
+### 1. Install dependencies
+
+Before running the app for the first time, install the project dependencies (node ^18.19.1):
+
+```bash
+npm install
+```
+
 To start a local development server, run:
 
 ```bash
