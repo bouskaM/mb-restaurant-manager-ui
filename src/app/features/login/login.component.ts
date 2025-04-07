@@ -60,11 +60,11 @@ import { Router } from '@angular/router';
 
           <button
             mat-raised-button
-            [disabled]="!isFormValid()"
+            [disabled]="!isFormValid() || loggingIn()"
             color="primary"
             class="full-width"
           >
-            Login
+            {{ loggingIn() ? 'Logging in...' : 'Login' }}
           </button>
         </form>
 
@@ -148,6 +148,7 @@ export class LoginComponent {
 
   /** Computed login error message from AuthService */
   readonly error = computed(() => this.authService.loginError());
+  readonly loggingIn = computed(() => this.authService.loggingIn());
 
   /** Form validity check (both fields required) */
   readonly isFormValid = computed(

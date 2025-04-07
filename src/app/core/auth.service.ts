@@ -10,6 +10,7 @@ export class AuthService {
 
   isLoggedIn = signal<boolean>(this.checkLoginStatus());
   loginError = signal<string | null>(null);
+  loggingIn = signal<boolean>(false);
 
   /**
    * Checks whether the user is currently logged in based on localStorage.
@@ -32,6 +33,7 @@ export class AuthService {
    * @param password - The user's password
    */
   async login(username: string, password: string): Promise<void> {
+    this.loggingIn.set(true);
     const payload: LoginRequest = { username, password };
 
     try {
@@ -51,10 +53,11 @@ export class AuthService {
             })
           )
       );
-
       if (!response) return;
     } catch (err) {
       this.loginError.set('An unexpected error occurred.');
+    } finally {
+      this.loggingIn.set(false);
     }
   }
 
